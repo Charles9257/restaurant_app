@@ -1,0 +1,293 @@
+ 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>GloS | Place Order </title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-secondary">
+	<div class="container-fluid">
+		<a class="navbar-brand" href="/">GloS</a>
+		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+		<div class="collapse navbar-collapse" id="navbarNav">
+			<ul class="navbar-nav ms-auto d-flex flex-row align-items-center gap-5">
+				<li class="nav-item">
+					<a class="nav-link" href="/about">About</a>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link" href="/menu">Menu</a>
+				</li>
+				<li class="nav-item">
+					<img src="/static/images/logo/LOGO 2.png" alt="Logo" class="img-fluid" style="max-height: 40px;">
+				</li>
+				<li class="nav-item">
+					<a class="nav-link" href="/place">Place</a>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link" href="/contact">Contact</a>
+				</li>
+			</ul>
+            <ul class="navbar-nav ms-auto d-flex flex-row align-items-center">
+                <li class="nav-item mx-2">
+                    <a class="nav-link" href="https://twitter.com" target="_blank"><i class="bi bi-twitter"></i></a>
+                </li>
+                <li class="nav-item mx-2">
+                    <a class="nav-link" href="https://instagram.com" target="_blank"><i class="bi bi-instagram"></i></a>
+                </li>
+                <li class="nav-item mx-2">
+                    <a class="nav-link" href="https://facebook.com" target="_blank"><i class="bi bi-facebook"></i></a>
+                </li>
+                <li class="nav-item mx-2">
+                    <a class="nav-link" href="https://wa.me/" target="_blank"><i class="bi bi-whatsapp"></i></a>
+                </li>
+			</ul>
+		</div>
+	</div>
+</nav>
+
+    <div class="row m-3">
+        <!-- Sidebar -->
+        <div class="col-lg-2 col-md-3 mb-2">
+            <div class="card shadow-sm h-100" style="min-height: 80vh;">
+                <div class="card-header bg-primary text-white">Cuisines</div>
+                <ul class="list-group list-group-flush" id="cuisineSidebar" style="height:100%;">
+                    <li class="list-group-item list-group-item-action" onclick="showCuisine('african')">African</li>
+                    <li class="list-group-item list-group-item-action" onclick="showCuisine('thai')">Thai</li>
+                    <li class="list-group-item list-group-item-action" onclick="showCuisine('american')">American</li>
+                    <li class="list-group-item list-group-item-action" onclick="showCuisine('italian')">Italian</li>
+                    <li class="list-group-item list-group-item-action" onclick="showCuisine('indian')">Indian</li>
+                </ul>
+            </div>
+        </div>
+        <!-- Main Content -->
+        <div class="col-lg-7 col-md-6">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            <div id="cuisineCards" class="row g-4">
+                <!-- Cuisine cards will be shown here -->
+            </div>
+            {% if current_user.is_admin %}
+                <a href="{{ url_for('dashboard') }}" class="btn btn-info mt-3">View Dashboard</a>
+            {% endif %}
+        </div>
+        <!-- Cart Sidebar -->
+        <div class="col-lg-3 col-md-3 mb-4">
+            <div class="card shadow-sm" id="cartSummary">
+                <div class="card-header bg-success text-white">Your Cart</div>
+                <div class="card-body">
+                    <ul class="list-group mb-3" id="cartItems">
+                        <!-- Cart items will appear here -->
+                    </ul>
+                    <h5 class="card-title">Total: $<span id="cartTotal">0</span></h5>
+                    <button class="btn btn-success w-100" id="checkoutBtn" data-bs-toggle="modal" data-bs-target="#orderModal" disabled>Checkout</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Order Confirmation Modal -->
+<div class="modal fade" id="orderModal" tabindex="-1" aria-labelledby="orderModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="orderModalLabel">Confirm Your Order</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="modalOrderSummary">
+        <!-- Order summary will be shown here -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="confirmOrderBtn">Place Order</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+const cuisines = {
+    african: [
+        {name: 'Jollof Rice', price: 10, available: true},
+        {name: 'Egusi Soup', price: 12, available: false},
+        {name: 'Pounded Yam', price: 8, available: true}
+    ],
+    thai: [
+        {name: 'Pad Thai', price: 11, available: true},
+        {name: 'Green Curry', price: 13, available: true},
+        {name: 'Tom Yum Soup', price: 9, available: false}
+    ],
+    american: [
+        {name: 'Burger', price: 7, available: true},
+        {name: 'Fries', price: 4, available: true},
+        {name: 'BBQ Ribs', price: 15, available: false}
+    ],
+    italian: [
+        {name: 'Pasta', price: 9, available: true},
+        {name: 'Pizza', price: 10, available: true},
+        {name: 'Risotto', price: 12, available: false}
+    ],
+    indian: [
+        {name: 'Biryani', price: 10, available: true},
+        {name: 'Butter Chicken', price: 13, available: true},
+        {name: 'Naan', price: 3, available: true}
+    ]
+};
+
+let cart = {};
+function showCuisine(category) {
+    const container = document.getElementById('cuisineCards');
+    container.innerHTML = '';
+    cuisines[category].forEach(cuisine => {
+        const card = document.createElement('div');
+        card.className = 'card mb-3';
+        const imgName = cuisine.name.replace(/ /g, '').toLowerCase() + '.png';
+        card.innerHTML = `
+            <img src="/static/images/foods/${imgName}" class="card-img-top" alt="${cuisine.name}" style="height:160px;object-fit:cover;">
+            <div class="card-body">
+                <h5 class="card-title">${cuisine.name}</h5>
+                <p class="card-text">Price: $${cuisine.price}</p>
+                <p class="card-text">Status: <span class="${cuisine.available ? 'text-success' : 'text-danger'}">${cuisine.available ? 'Available' : 'Not Available'}</span></p>
+                <button class="btn btn-primary add-cart-btn" data-cuisine="${cuisine.name}" data-price="${cuisine.price}" ${cuisine.available ? '' : 'disabled'}>Add to Cart</button>
+            </div>
+        `;
+        container.appendChild(card);
+    });
+    setTimeout(() => {
+        document.querySelectorAll('.add-cart-btn').forEach(btn => {
+            btn.onclick = function() {
+                const cuisineName = this.getAttribute('data-cuisine');
+                const price = parseFloat(this.getAttribute('data-price'));
+                if (!cart[cuisineName]) {
+                    cart[cuisineName] = {qty: 1, price: price};
+                } else {
+                    cart[cuisineName].qty += 1;
+                }
+                updateCart();
+            };
+        });
+    }, 100);
+}
+
+function updateCart() {
+    const cartItems = document.getElementById('cartItems');
+    const cartTotal = document.getElementById('cartTotal');
+    const checkoutBtn = document.getElementById('checkoutBtn');
+    cartItems.innerHTML = '';
+    let total = 0;
+    let itemCount = 0;
+    for (const [name, item] of Object.entries(cart)) {
+        const li = document.createElement('li');
+        li.className = 'list-group-item d-flex justify-content-between align-items-center';
+        li.innerHTML = `
+            <span>${name}</span>
+            <span class="badge bg-primary rounded-pill">${item.qty} x $${item.price}</span>
+            <button class="btn btn-sm btn-outline-danger ms-2 remove-item" data-cuisine="${name}"><i class="bi bi-trash"></i></button>
+        `;
+        cartItems.appendChild(li);
+        total += item.qty * item.price;
+        itemCount += item.qty;
+    }
+    cartTotal.textContent = total.toFixed(2);
+    checkoutBtn.disabled = itemCount === 0;
+    document.getElementById('cartSummary').querySelector('.card-header').innerHTML = `Your Cart <span class="badge bg-warning ms-2">${itemCount} items</span>`;
+    document.querySelectorAll('.remove-item').forEach(btn => {
+        btn.onclick = function() {
+            const cuisineName = this.getAttribute('data-cuisine');
+            delete cart[cuisineName];
+            updateCart();
+        };
+    });
+}
+
+document.getElementById('checkoutBtn').onclick = function() {
+    const modalSummary = document.getElementById('modalOrderSummary');
+    let html = '<ul class="list-group mb-3">';
+    let total = 0;
+    for (const [name, item] of Object.entries(cart)) {
+        html += `<li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>${name}</span>
+            <span class="badge bg-primary rounded-pill">${item.qty} x $${item.price}</span>
+        </li>`;
+        total += item.qty * item.price;
+    }
+    const vat = total * 0.075;
+    const shipping = 5;
+    html += '</ul>';
+    html += `<h5>Subtotal: $${total.toFixed(2)}</h5>`;
+    html += `<h5>VAT (7.5%): $${vat.toFixed(2)}</h5>`;
+    html += `<h5>Shipping Fee: $${shipping.toFixed(2)}</h5>`;
+    html += `<h4 class="mt-3">Grand Total: $${(total+vat+shipping).toFixed(2)}</h4>`;
+    html += `<form id="checkoutForm">
+        <div class="mb-2"><label>Address</label><input type="text" class="form-control" name="address" required></div>
+        <div class="mb-2"><label>Phone Number</label><input type="text" class="form-control" name="phone" required></div>
+        <div class="mb-2"><label>Post Code</label><input type="text" class="form-control" name="postcode" required></div>
+    </form>`;
+    modalSummary.innerHTML = html;
+};
+
+document.getElementById('confirmOrderBtn').onclick = function() {
+    const form = document.getElementById('checkoutForm');
+    if (!form) return;
+    const address = form.address.value;
+    const phone = form.phone.value;
+    const postcode = form.postcode.value;
+    const modalSummary = document.getElementById('modalOrderSummary');
+    let total = 0;
+    for (const item of Object.values(cart)) total += item.qty * item.price;
+    const vat = total * 0.075;
+    const shipping = 5;
+    const grandTotal = total + vat + shipping;
+    fetch('/place_order', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({ cart: cart, address, phone, postcode, vat, shipping, grandTotal })
+    })
+    .then(response => response.json())
+    .then(data => {
+        showOrderMessage(data.message, data.status);
+        cart = {};
+        updateCart();
+        let modalEl = document.getElementById('orderModal');
+        let modal = bootstrap.Modal.getInstance(modalEl);
+        if (!modal) modal = new bootstrap.Modal(modalEl);
+        modal.hide();
+    })
+    .catch(() => {
+        showOrderMessage('Order failed. Try again.', 'danger');
+    });
+};
+
+function showOrderMessage(message, status) {
+    const container = document.getElementById('cuisineCards');
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${status} alert-dismissible fade show`;
+    alert.role = 'alert';
+    alert.innerHTML = `${message}<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>`;
+    container.prepend(alert);
+}
+
+window.onload = function() {
+    showCuisine('african');
+    updateCart();
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+/* General body styling */
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Container for forms */
+.container {
+    background: #fff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 15px rgba(0,0,0,0.1);
+}
+
+/* Buttons */
+.btn {
+    border-radius: 5px;
+}
+
+/* Card styling */
+.card {
+    background-color: #e9ecef;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* Table styling */
+table {
+    background-color: #fff;
+}
+
+/* Header */
+h2 {
+    color: #343a40;
+    margin-bottom: 20px;
+}
